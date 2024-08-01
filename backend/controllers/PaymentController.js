@@ -9,12 +9,10 @@ const handleStripePayment = asyncHandler(async (req, res) => {
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Number(amount) * 100,
-      currency: "usd",
-    //   source: tokenId,
-      description,
+      amount,
+      currency: 'usd', // O la moneda que prefieras
+      payment_method_types: ['card'],
     });
-    console.log(paymentIntent);
 
     const payment = new Payment({
       stripeChargeId: paymentIntent.id,
@@ -26,7 +24,9 @@ const handleStripePayment = asyncHandler(async (req, res) => {
 
     await payment.save();
 
-    res.json({ clientSecret: paymentIntent.client_secret });
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
     // res.json({
     //   success: true,
     //   payment,
@@ -39,4 +39,4 @@ const handleStripePayment = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports= handleStripePayment
+module.exports = handleStripePayment;
