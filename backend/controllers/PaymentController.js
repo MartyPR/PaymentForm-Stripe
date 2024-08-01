@@ -23,13 +23,14 @@ const handleStripePayment = asyncHandler(async (req, res) => {
       description: paymentIntent.description,
       status: paymentIntent.status,
     });
-    console.log("save?");
+
     await payment.save();
-    res.json({
-      success: true,
-      clientSecret: paymentIntent.client_secret,
-      payment,
-    });
+
+    res.json({ clientSecret: paymentIntent.client_secret });
+    // res.json({
+    //   success: true,
+    //   payment,
+    // });
   } catch (error) {
     res.json({
       success: false,

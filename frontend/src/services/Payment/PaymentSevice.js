@@ -1,16 +1,13 @@
 import axios from "axios";
 
-export const createStripePayment = async (payment) => {
+export const createStripePayment = async ({ token, amount, description }) => {
   const response = await axios.post(
     "http://localhost:8000/api/v1/stripe",
-    {
-      tokenId: payment.token,
-      amount: Number(payment?.amount),
-      description: payment.description,
-    },
-    {
-      withCredentials: true,
-    }
+    { tokenId: token, amount, description },
+    { headers: { "Content-Type": "application/json" } }
   );
-  return response?.data;
+  if (response.status !== 200) {
+    throw new Error("Failed to create payment intent");
+  }
+  return response.data.clientSecret;
 };
