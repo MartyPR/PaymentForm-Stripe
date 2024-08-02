@@ -1,67 +1,67 @@
-// App.js
-import React, { useState, useEffect } from 'react';
-import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
+import React, { useState } from 'react';
 
-// Cargar Stripe
-const stripePromise = loadStripe('pk_test_51PWkZzRxhjnT4bkRjgfgWP8qbElFrbANhhoWUDGRiFOAQoXsFWb0P5Yjk57ZYlNsF8VCeLbJXIXn2G6exIwhWQrD00eUTCnR3s'); // Reemplaza con tu clave pública de Stripe
+import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { createStripePayment } from '../services/Payment/PaymentSevice';
+
+
+
 
 const CheckoutForm = () => {
   const stripe = useStripe();
   const elements = useElements();
-  const [clientSecret, setClientSecret] = useState('');
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-
-  useEffect(() => {
-    // Llamar al backend para obtener el clientSecret
-    const fetchClientSecret = async () => {
-      const response = await fetch('/create-payment-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ amount: 1000 }), // Monto en centavos
-      });
-      const data = await response.json();
-      setClientSecret(data.clientSecret);
-    };
-
-    fetchClientSecret();
-  }, []);
-
+  const [errorMessage, setErrorMessage] = useState(null);
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    if (!stripe || !elements || !clientSecret) {
+    if (elements === null) {
+      return; 
+    }
+    const {error:submitError}= await elements.submit();
+    if (submitError) {
       return;
     }
-
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: 'https://tu-sitio.com/checkout-success', // URL a la que se redirigirá después del pago
-      },
-    });
-
-    if (error) {
-      setError(error.message);
-    } else if (paymentIntent.status === 'succeeded') {
-      setSuccess('Pago exitoso');
+    try {
+      const data={
+        token:"123456",
+        amount:2000,
+        description:"prueba de descripsion"
+      }
+      const intentPay = await createStripePayment(data);
+      if (intentPay) {
+        const {error}= await stripe.confirmPayment({
+          elements,
+          clientSecret: intentPay,
+          confirmParams:{
+            return_url:"http://localhost:3000/success"
+          }
+        })
+        if (error) {
+          setErrorMessage(error?.message);
+        }
+      }
+    } catch (error) {
+      setErrorMessage(error?.message);
     }
+
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <PaymentElement />
-      <button type="submit" disabled={!stripe}>
-        Pagar
-      </button>
-      {error && <div>{error}</div>}
-      {success && <div>{success}</div>}
+    <div className="bg-gray-900 h-screen -mt-4 flex justify-center items-center">
+    <form
+      onSubmit={handleSubmit}
+      className="w-96 mx-auto my-4 p-6 bg-white rounded-lg shadow-md"
+    >
+      <div className="mb-4">
+      <PaymentElement/>
+      </div>
+
+      <button className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        Pay
+      </button> 
+
     </form>
+  </div>
+
   );
 };
-
 
 export default CheckoutForm;

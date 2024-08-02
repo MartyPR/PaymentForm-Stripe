@@ -12,20 +12,23 @@ const handleStripePayment = asyncHandler(async (req, res) => {
       amount,
       currency: 'usd', // O la moneda que prefieras
       payment_method_types: ['card'],
+      confirmation_method: 'manual', // Change to 'automatic' if you want automatic confirmation
+      confirm: true, // Automatically confirm the payment intent
     });
 
     const payment = new Payment({
       stripeChargeId: paymentIntent.id,
       amount: paymentIntent.amount,
       currency: paymentIntent.currency,
-      description: paymentIntent.description,
+      description: description,
       status: paymentIntent.status,
     });
 
     await payment.save();
 
-    res.send({
+    res.json({
       clientSecret: paymentIntent.client_secret,
+      paymentId: paymentIntent.id,
     });
     // res.json({
     //   success: true,
