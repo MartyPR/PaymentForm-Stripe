@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const stripeRouter = require("./routes/PaymentRoute");
 const { errorHandler } = require("./middlewares/errorMiddlewares");
 const cors = require("cors");
+const payURoute = require("./routes/PayURoute");
 const app = express();
 const PORT = process.env.PORT || 8000;
 
@@ -23,6 +24,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 //!Routes
 app.use("/api/v1/stripe", stripeRouter);
+app.use("/api/pay", payURoute);
 app.use("/", (req, res) => res.json({ success: true }));
 //Error handler middlewate
 app.use(errorHandler);
